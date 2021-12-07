@@ -22,9 +22,8 @@ def expandVisits(date_range_start, visits_by_day):
     return visits
 
 def computeStats(groupCount, group, visits):
-    counts = groupCount[group]
-    visits = np.array(visits)
-    visits.resize(counts)
+    visits = np.fromiter(visits, np.int_)
+    visits.resize(groupCount[group])
     median = int(np.ceil(np.median(visits)))
     std = int(np.round(np.std(visits)))
     high = median+std 
