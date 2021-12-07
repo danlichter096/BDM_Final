@@ -68,7 +68,7 @@ def main(sc, spark):
     
     dfI = dfH.groupBy('group', 'year', 'date') \
              .agg(F.collect_list('visits').alias('visits')) \
-             .withColumn('stats', udfComputeStats(groupCount)('group', 'visits'))
+             .withColumn('stats', udfComputeStats('group', 'visits'))
     
     dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
 
