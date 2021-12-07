@@ -22,8 +22,9 @@ def expandVisits(date_range_start, visits_by_day):
     return visits
 
 def computeStats(groupCount, group, visits):
-    visits = np.fromiter(visits, np.int_)
-    visits.resize(groupCount[group])
+    counts = groupCount[group]
+    visits = np.array(visits)
+    visits.resize(counts)
     median = int(np.ceil(np.median(visits)))
     std = int(np.round(np.std(visits)))
     high = median+std 
@@ -70,7 +71,7 @@ def main(sc, spark):
     udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)
     dfI = dfH.groupBy('group', 'year', 'date') \
             .agg(F.collect_list('visits').alias('visits')) \
-            .withColumn('stats', udfComputeStats('group', 'visits')).drop('visits').select('stats.*')
+            .withColumn('stats', udfComputeStats('group', 'visits')).select('stats.*')
    
     #dfJ = dfI \
     #    .select('group','year','date','stats.*').orderBy('group','year','date')\
