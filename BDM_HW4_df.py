@@ -2,6 +2,7 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
+import functools
 import datetime
 import json
 import numpy as np
@@ -20,7 +21,7 @@ def expandVisits(date_range_start, visits_by_day):
         visits.append([year,date,x])
     return visits
 
-def computeStats(group, visits):
+def computeStats(groupCount, group, visits):
     counts = groupCount.get(int(group))
     visits = np.array(visits)
     visits.resize(counts)
@@ -54,7 +55,7 @@ def main(sc, spark):
     statsType = T.StructType([T.StructField('median', T.IntegerType()),
                               T.StructField('low', T.IntegerType()),
                               T.StructField('high', T.IntegerType())])
-    udfComputeStats = F.udf(computeStats, statsType)
+    
 
     dfD = dfPlaces.select('placekey','naics_code')\
           .where(F.col('naics_code').isin(CAT_CODES))
@@ -66,11 +67,12 @@ def main(sc, spark):
                    .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
                    .select('group', 'expanded.*')\
                    .where(F.col('year')>2018)
-    dfH.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
-    #dfI = dfH.groupBy('group', 'year', 'date') \
-    #         .agg(F.collect_list('visits').alias('visits')) \
-    #         .withColumn('stats', udfComputeStats('group', 'visits'))
     
+    udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)
+    dfI = dfH.groupBy('group', 'year', 'date') \
+             .agg(F.collect_list('visits').alias('visits')) \
+             .withColumn('stats', udfComputeStats('group', 'visits'))
+    dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
 if __name__=='__main__':
