@@ -32,7 +32,7 @@ def computeStats(groupCount, group, visits):
       low = 0
     else:
       low = median-std
-    return (0, 0, 0)
+    return (median, low, high)
 
 def main(sc, spark):
     '''
