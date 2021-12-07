@@ -70,7 +70,7 @@ def main(sc, spark):
     udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)
     dfI = dfH.groupBy('group', 'year', 'date') \
             .agg(F.collect_list('visits').alias('visits')) \
-            .withColumn('stats', udfComputeStats('group', 'visits')).drop('visits')
+            .withColumn('stats', udfComputeStats('group', 'visits')).drop('visits').drop('stats')
    
     #dfJ = dfI \
     #    .select('group','year','date','stats.*').orderBy('group','year','date')\
