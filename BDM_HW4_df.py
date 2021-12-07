@@ -7,7 +7,7 @@ import json
 import numpy as np
 import sys
 
-global groupCount = {}
+#global groupCount = {}
 def expandVisits(date_range_start, visits_by_day):
     visits = []
     visits_by_day = list(map(lambda x: int(x), visits_by_day.replace('[','').replace(']', '').split(',')))
