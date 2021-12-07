@@ -22,7 +22,7 @@ def expandVisits(date_range_start, visits_by_day):
     return visits
 
 def computeStats(groupCount, group, visits):
-    counts = groupCount[int(group)]
+    counts = groupCount[group]
     visits = np.array(visits)
     visits.resize(counts)
     median = int(np.ceil(np.median(visits)))
