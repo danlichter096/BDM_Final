@@ -74,6 +74,10 @@ def main(sc, spark):
             .withColumn('stats', udfComputeStats('group', 'visits')) 
     
     dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+    dfJ = dfI \
+        .select('group','year','date','stats.*').orderBy('group','year','date')\
+        .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
+        .cache()
     
 
 if __name__=='__main__':
