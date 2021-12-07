@@ -47,19 +47,20 @@ def main(sc, spark):
     
     udfToGroup = F.udf(lambda x: CAT_GROUP.get(x))
     groupCount = dict(dfF.groupBy('group').count().collect())
+    dfD = dfPlaces.select('placekey','naics_code')\
+          .where(F.col('naics_code').isin(CAT_CODES))
     visitType = T.StructType([T.StructField('year', T.IntegerType()),
                           T.StructField('date', T.StringType()),
                           T.StructField('visits', T.IntegerType())])
-    udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
+    #udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
     
-    statsType = T.StructType([T.StructField('median', T.IntegerType()),
-                              T.StructField('low', T.IntegerType()),
-                          T.StructField('high', T.IntegerType())])
+    #statsType = T.StructType([T.StructField('median', T.IntegerType()),
+    #                          T.StructField('low', T.IntegerType()),
+    #                      T.StructField('high', T.IntegerType())])
 
-    udfComputeStats = F.udf(computeStats, statsType)
+    #udfComputeStats = F.udf(computeStats, statsType)
     
-    #dfD = dfPlaces.select('placekey','naics_code')\
-    #      .where(F.col('naics_code').isin(CAT_CODES))
+
     #dfE = dfD.withColumn('group', udfToGroup('naics_code'))
     #dfF = dfE.drop('naics_code').cache()
     #dfH = dfPattern.join(dfF, 'placekey') \
