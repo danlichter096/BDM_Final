@@ -22,7 +22,7 @@ def expandVisits(date_range_start, visits_by_day):
     return visits
 
 def computeStats(groupCount, group, visits):
-    counts = groupCount[group]
+    counts = groupCount[int(group)]
     visits = np.array(visits)
     visits.resize(counts)
     median = int(np.ceil(np.median(visits)))
@@ -69,15 +69,15 @@ def main(sc, spark):
                    .where(F.col('year')>2018)
     
     udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)
-    #dfI = dfH.groupBy('group', 'year', 'date') \
-    #        .agg(F.collect_list('visits').alias('visits')) \
-    #        .withColumn('stats', udfComputeStats('group', 'visits')).drop('visits')
-    dfF.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
-    #dfJ = dfI \
-    #    .select('group','year','date','stats.*').orderBy('group','year','date')\
-    #    .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
-        #.cache()
-    #dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+    dfI = dfH.groupBy('group', 'year', 'date') \
+            .agg(F.collect_list('visits').alias('visits')) \
+            .withColumn('stats', udfComputeStats('group', 'visits'))
+   
+    dfJ = dfI \
+        .select('group','year','date','stats.*').orderBy('group','year','date')\
+        .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
+        .cache()
+    dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
 if __name__=='__main__':
