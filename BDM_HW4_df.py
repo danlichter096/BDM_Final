@@ -7,6 +7,7 @@ import json
 import numpy as np
 import sys
 
+global groupCount = {}
 def expandVisits(date_range_start, visits_by_day):
     visits = []
     visits_by_day = list(map(lambda x: int(x), visits_by_day.replace('[','').replace(']', '').split(',')))
@@ -59,7 +60,7 @@ def main(sc, spark):
           .where(F.col('naics_code').isin(CAT_CODES))
     dfE = dfD.withColumn('group', udfToGroup('naics_code'))
     dfF = dfE.drop('naics_code').cache()
-    global groupCount = dict(dfF.groupBy('group').count().collect())
+    groupCount = dict(dfF.groupBy('group').count().collect())
 
     dfH = dfPattern.join(dfF, 'placekey') \
                    .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
