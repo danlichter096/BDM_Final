@@ -73,7 +73,7 @@ def main(sc, spark):
             .agg(F.collect_list('visits').alias('visits')) \
             .withColumn('stats', udfComputeStats('group', 'visits')) 
     
-    #dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+    dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
 if __name__=='__main__':
