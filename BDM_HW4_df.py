@@ -50,6 +50,9 @@ def main(sc, spark):
     dfD = dfPlaces.select('placekey','naics_code')\
           .where(F.col('naics_code').isin(CAT_CODES))
     dfE = dfD.withColumn('group', udfToGroup('naics_code'))
+    dfF = dfE.drop('naics_code').cache()
+    groupCount = dict(dfF.groupBy('group').count().collect())
+    
     #visitType = T.StructType([T.StructField('year', T.IntegerType()),
     #                      T.StructField('date', T.StringType()),
     #                      T.StructField('visits', T.IntegerType())])
@@ -62,9 +65,7 @@ def main(sc, spark):
     #udfComputeStats = F.udf(computeStats, statsType)
     
 
-    #dfE = dfD.withColumn('group', udfToGroup('naics_code'))
-    #dfF = dfE.drop('naics_code').cache()
-    #groupCount = dict(dfF.groupBy('group').count().collect())
+
     #dfH = dfPattern.join(dfF, 'placekey') \
     #.withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
     #.select('group', 'expanded.*')\
