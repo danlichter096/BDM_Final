@@ -46,25 +46,20 @@ def main(sc, spark):
              '446110': 5, '722515': 6, '311811': 6, '445299': 7, '445220': 7, '445292': 7, '445291': 7, '445230': 7, '445210': 7, '445110': 8}
     
     udfToGroup = F.udf(lambda x: CAT_GROUP.get(x))
+    visitType = T.StructType([T.StructField('year', T.IntegerType()),
+                              T.StructField('date', T.StringType()),
+                              T.StructField('visits', T.IntegerType())])
+    udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
+    statsType = T.StructType([T.StructField('median', T.IntegerType()),
+                              T.StructField('low', T.IntegerType()),
+                              T.StructField('high', T.IntegerType())])
+    udfComputeStats = F.udf(computeStats, statsType)
 
     dfD = dfPlaces.select('placekey','naics_code')\
           .where(F.col('naics_code').isin(CAT_CODES))
     dfE = dfD.withColumn('group', udfToGroup('naics_code'))
     dfF = dfE.drop('naics_code').cache()
     groupCount = dict(dfF.groupBy('group').count().collect())
-    
-    #visitType = T.StructType([T.StructField('year', T.IntegerType()),
-    #                      T.StructField('date', T.StringType()),
-    #                      T.StructField('visits', T.IntegerType())])
-    #udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
-    
-    #statsType = T.StructType([T.StructField('median', T.IntegerType()),
-    #                          T.StructField('low', T.IntegerType()),
-    #                      T.StructField('high', T.IntegerType())])
-
-    #udfComputeStats = F.udf(computeStats, statsType)
-    
-
 
     #dfH = dfPattern.join(dfF, 'placekey') \
     #.withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
