@@ -75,8 +75,8 @@ def main(sc, spark):
     dfJ = dfI \
         .select('group','year','date','stats.*').orderBy('group','year','date')\
         .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
-        .cache()
-    #dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+        #.cache()
+    dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
 if __name__=='__main__':
