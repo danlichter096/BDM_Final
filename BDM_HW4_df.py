@@ -80,7 +80,7 @@ def main(sc, spark):
     .cache()
     
     fileNames = ['big_box_grocers', 'convenience_stores', 'drinking_places', 'full_service_restaurants', 'limited_service_restaurants',
-             'pharmacies_and_drug_stores','snack_and_retail_bakeries', 'specialty_food_stores', 'supermarkets_except_convenience_stores']
+             'pharmacies_and_drug_stores','snack_and_bakeries', 'specialty_food_stores', 'supermarkets_except_convenience_stores']
     
     for x in range(len(fileNames)):
         dfJ.filter(f'group={x}') \
