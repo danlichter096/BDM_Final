@@ -65,7 +65,7 @@ def main(sc, spark):
     udfExpand = F.udf(expandVisits, T.ArrayType(visitType))        
     udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)    
 
-    dfH = dfPattern.join(dfWantedStores, 'placekey') \
+    dfH = dfPattern.join(dfWantedPlaces, 'placekey') \
                    .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
                    .select('group', 'expanded.*')\
                    .where(F.col('year')>2018)
