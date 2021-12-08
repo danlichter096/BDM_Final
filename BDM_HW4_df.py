@@ -72,8 +72,13 @@ def main(sc, spark):
 
     dfI = dfH.groupBy('group', 'year', 'date') \
             .agg(F.collect_list('visits').alias('visits')) \
-            .withColumn('stats', udfComputeStats('group', 'visits')).select('group','year','date', 'stats.*')
-    dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+            .withColumn('stats', udfComputeStats('group', 'visits'))
+    
+    dfJ = dfI \
+    .select('group','year','date','stats.*').orderBy('group','year','date')\
+    .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
+    .cache()
+    dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
    
 
