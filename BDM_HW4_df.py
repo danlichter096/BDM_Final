@@ -21,7 +21,7 @@ def expandVisits(date_range_start, visits_by_day):
         visits.append([year,date,x])
     return visits
 
-def computeStats(group, visits):
+def computeStats(groupCount, group, visits):
     counts = groupCount[group]
     visits = np.array(visits)
     visits.resize(counts)
@@ -68,7 +68,7 @@ def main(sc, spark):
                           T.StructField('low', T.IntegerType()),
                           T.StructField('high', T.IntegerType())])
 
-    udfComputeStats = F.udf(computeStats, statsType)
+    udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)  
 
     dfI = dfH.groupBy('group', 'year', 'date') \
             .agg(F.collect_list('visits').alias('visits')) \
