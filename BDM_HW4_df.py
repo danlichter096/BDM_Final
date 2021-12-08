@@ -48,36 +48,38 @@ def main(sc, spark):
              '446110': 5, '722515': 6, '311811': 6, '445299': 7, '445220': 7, '445292': 7, '445291': 7, '445230': 7, '445210': 7, '445110': 8}
     
     udfToGroup = F.udf(CAT_GROUP.get, T.IntegerType())
+    dfWantedPlaces = dfPlaces.select('placekey','naics_code')\
+                             .where(F.col('naics_code').isin(CAT_CODES))\
+                             .withColumn('group', udfToGroup('naics_code'))\
+                             .drop('naics_code').cache()
+
+    groupCount = dict(dfWantedPlaces.groupBy('group').count().collect())
+    
     visitType = T.StructType([T.StructField('year', T.IntegerType()),
                               T.StructField('date', T.StringType()),
                               T.StructField('visits', T.IntegerType())])
-    udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
+
     statsType = T.StructType([T.StructField('median', T.IntegerType()),
                               T.StructField('low', T.IntegerType()),
                               T.StructField('high', T.IntegerType())])
+    udfExpand = F.udf(expandVisits, T.ArrayType(visitType))        
+    udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)    
+    dfWantedPlaces.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
-    dfD = dfPlaces.select('placekey','naics_code')\
-          .where(F.col('naics_code').isin(CAT_CODES))
-    dfE = dfD.withColumn('group', udfToGroup('naics_code'))
-    dfF = dfE.drop('naics_code').cache()
-    groupCount = dict(dfF.groupBy('group').count().collect())
-
-    dfH = dfPattern.join(dfF, 'placekey') \
-                   .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
-                   .select('group', 'expanded.*')\
-                   .where(F.col('year')>2018)
-    
-    udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)
-    dfI = dfH.groupBy('group', 'year', 'date') \
-            .agg(F.collect_list('visits').alias('visits')) \
-            .withColumn('stats', udfComputeStats('group', 'visits')).select('stats.*')
+    #dfH = dfPattern.join(dfF, 'placekey') \
+    #               .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
+    #               .select('group', 'expanded.*')\
+    #               .where(F.col('year')>2018)
+    #dfI = dfH.groupBy('group', 'year', 'date') \
+    #        .agg(F.collect_list('visits').alias('visits')) \
+    #        .withColumn('stats', udfComputeStats('group', 'visits')).select('stats.*')
    
     #dfJ = dfI \
     #    .select('group','year','date','stats.*').orderBy('group','year','date')\
     #    .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
     #    .cache()
-    dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+    #dfI.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     
 
 if __name__=='__main__':
