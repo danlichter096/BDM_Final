@@ -47,6 +47,26 @@ def main(sc, spark):
     CAT_GROUP = {'452311': 0, '452210': 0, '445120': 1, '722410': 2, '722511': 3, '722513': 4, '446191': 5, 
              '446110': 5, '722515': 6, '311811': 6, '445299': 7, '445220': 7, '445292': 7, '445291': 7, '445230': 7, '445210': 7, '445110': 8}
     
+    dfD = dfPlaces.select('placekey','naics_code')\
+          .where(F.col('naics_code').isin(CAT_CODES))
+    udfToGroup = F.udf(CAT_GROUP.get, T.IntegerType())
+    dfE = dfD.withColumn('group', udfToGroup('naics_code'))
+    dfF = dfE.drop('naics_code').cache()
+    groupCount = dict(dfF.groupBy('group').count().collect())
+    
+    visitType = T.StructType([T.StructField('year', T.IntegerType()),
+                          T.StructField('date', T.StringType()),
+                          T.StructField('visits', T.IntegerType())])
+
+    udfExpand = F.udf(expandVisits, T.ArrayType(visitType))
+
+    dfH = dfPattern.join(dfF, 'placekey') \
+                   .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
+                   .select('group', 'expanded.*')\
+                   .where(F.col('year')>2018)
+    dfH.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
+    
+   ''' 
     udfToGroup = F.udf(CAT_GROUP.get, T.IntegerType())
     dfWantedPlaces = dfPlaces.select('placekey','naics_code')\
                              .where(F.col('naics_code').isin(CAT_CODES))\
@@ -78,7 +98,7 @@ def main(sc, spark):
         .withColumn('date',F.concat(F.lit('2020-'),F.col('date')))\
         .cache()
     dfJ.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
-    
+    '''
 
 if __name__=='__main__':
     sc = SparkContext()
