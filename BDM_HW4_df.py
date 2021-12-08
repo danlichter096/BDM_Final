@@ -65,10 +65,10 @@ def main(sc, spark):
     udfExpand = F.udf(expandVisits, T.ArrayType(visitType))        
     udfComputeStats = F.udf(functools.partial(computeStats, groupCount), statsType)    
 
-    dfH = dfPattern.join(dfF, 'placekey') \
+    dfH = dfPattern.join(dfWantedStores, 'placekey') \
                    .withColumn('expanded', F.explode(udfExpand('date_range_start', 'visits_by_day'))) \
-                   .select('group', 'expanded.*')
-#                   .where(F.col('year')>2018)
+                   .select('group', 'expanded.*')\
+                   .where(F.col('year')>2018)
     dfH.write.csv(f'{OUTPUT_PREFIX}/test',mode='overwrite', header=True)
     #dfI = dfH.groupBy('group', 'year', 'date') \
     #        .agg(F.collect_list('visits').alias('visits')) \
